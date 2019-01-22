@@ -2,6 +2,7 @@
 
 RSpec.describe JSRailsRoutes::Route do
   subject(:route) { described_class.new(raw_route) }
+  subject(:route_with_prefix_params) { described_class.new(raw_route_with_prefix_params) }
 
   include_context 'run in a sandbox'
 
@@ -9,6 +10,16 @@ RSpec.describe JSRailsRoutes::Route do
     ActionDispatch::Routing::RouteSet.new.tap do |routes|
       routes.draw do
         get '/articles' => 'articles#index'
+      end
+    end.routes.first
+  end
+
+  let(:raw_route_with_prefix_params) do
+    ActionDispatch::Routing::RouteSet.new.tap do |routes|
+      routes.draw do
+        scope '(:locale)', locale: /#{I18n.available_locales.map(&:to_s).join('|')}/ do
+          get '/articles/:id' => 'articles#show'
+        end
       end
     end.routes.first
   end
@@ -28,9 +39,17 @@ RSpec.describe JSRailsRoutes::Route do
   end
 
   describe '#path' do
-    subject { route.path }
+    context 'when without parameters' do
+      subject { route.path }
 
-    it { is_expected.to eq '/articles' }
+      it { is_expected.to eq '/articles' }
+    end
+
+    context 'when with parameters' do
+      subject { route_with_prefix_params.path }
+
+      it { is_expected.to eq '(/:locale)/articles/:id' }
+    end
   end
 
   describe '#match?' do

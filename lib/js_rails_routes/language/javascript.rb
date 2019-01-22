@@ -44,12 +44,19 @@ module JSRailsRoutes
       # @return [Array<(String, Array<String>)>]
       def parse(route_path)
         destructured_path = route_path.dup
-        keys = []
-        while destructured_path =~ JSRailsRoutes::PARAM_REGEXP
-          key = camelize(Regexp.last_match(1))
-          keys.push("'#{key}'")
-          destructured_path.sub!(JSRailsRoutes::PARAM_REGEXP, "' + params.#{key} + '#{Regexp.last_match(2)}")
-        end
+        keys = destructured_path.split('/').grep(/:(\w*)/)
+        splited_path = destructured_path.split('/')
+        keys = splited_path.map{ |splited| splited =~ /:(\w*)\)?$/ ? Regexp.last_match(1) : nil }.compact
+        destructured_path = splited_path.reduce do |path, splited|
+          path +=
+            if splited =~ /\)$/
+              "' + params.#{key} ? '/' + params.#{key} : '' + '"
+            elsif splited =~ /^:(\w*)/
+              "/' + params.#{key} + '"
+            else
+              "/#{splited}"
+            end
+        end.sub(/^\(/, '')
         [destructured_path, keys]
       end
 
