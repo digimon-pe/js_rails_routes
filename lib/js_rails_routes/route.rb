@@ -16,7 +16,8 @@ module JSRailsRoutes
     def initialize(route)
       @route = route
       @name = route.name
-      @path = route.path.spec.to_s.sub(/\(.:format\)/, '').sub('(', '').sub(')', '')
+      #@path = route.path.spec.to_s.sub(/\(.:format\)/, '').sub('(', '').sub(')', '')
+      @path = route.path.spec.to_s.sub(/\(.:format\)/, '').delete('(').delete(')')
     end
 
     # @return [Boolean]
